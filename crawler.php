@@ -12,42 +12,47 @@ $board_name = null;
 if (isset($argv[1])) {
 	$board_name = $argv[1];
 } else {
-	exit("usage: php crawler.php {Borard Name}");
+	$fe = fopen('php://stderr', 'w');
+	fwrite($fe, "usage: php crawler.php {Board Name} \n");
+	fclose($fe);
+	exit();
 }
 
 $db = new RDB();
 
+$fe = fopen('php://stderr', 'w');
 fetch_board($db, $board_name);
-echo "fetch finished! \n";
+fwrite($fe, "fetch finished! \n");
+fclose($fe);
 
 // 取得該board所有文章基本資料
 function fetch_board($db, $board_name)
 {
+	$fe = fopen('php://stderr', 'w');
 	$arr_post_list = array();
 	$last_page = page_count($board_name, null) + 1;
-	echo "fetching board... \n";
-	echo "total page: " . $last_page . "\n";
+	fwrite($fe, "total page: " . $last_page . "\n");
 	$expired = false;
 	for ($i= $last_page; $i >= 1 ; $i--) {
-		echo "fetching page: " . $i ."\n";
+		fwrite($fe, "fetching page: " . $i ."\n");
 		$fetch_data = fetch_item($board_name, $i);
 		// 檢測文章是否過期
 		if ($expired) {
-			echo "articles are expired! stop fetching... \n";
+			fwrite($fe, "articles are expired! stop fetching... \n");
 			break;
 		}
 		foreach($fetch_data as $item) {
 			// 過濾失敗文章
 			if ($fetch_data == NULL) {
-				echo "notice! list: " . $i ." was skipped \n";
+				fwrite($fe, "notice! list: " . $i ." was skipped \n");
 				continue;
 			// 略過已抓過的文章
 			} else if ($db->IsArticle($item["url"])) {
-				echo "notice! article: " . $item["url"] ." has been in database \n";
+				fwrite($fe, "notice! article: " . $item["url"] ." has been in database \n");
 				continue;
 			// 略過已過期文章
 			} else if (is_date_over($item["date"])) {
-				echo "notice! article: " . $item["url"] ." has been expired \n";
+				fwrite($fe, "notice! article: " . $item["url"] ." has been expired \n");
 				$expired = true;
 				continue;
 			}
@@ -63,6 +68,7 @@ function fetch_board($db, $board_name)
 		}
 		sleep(LIST_SLEEP);
 	}
+	fclose($fe);
 }
 
 // 取得該版總頁數
@@ -108,6 +114,7 @@ function fetch_item($board_name, $index)
 // 取得當頁的html
 function fetch_page_html($board_name, $index = null)
 {
+	$fe = fopen('php://stderr', 'w');
 	$result = null;
 	$url = "https://www.ptt.cc/bbs/{$board_name}/index{$index}.html";
 	$opts = array(
@@ -124,17 +131,18 @@ function fetch_page_html($board_name, $index = null)
 	$error_count = 0;
 	while ($error_count < 3 && ($result = @file_get_contents($url, false, $context)) == false)
 	{
-		echo "connection error, retry... \n";
+		fwrite($fe, "connection error, retry... \n");
 		sleep(ERROR_SLEEP);
 		$error_count++;
 	}
-
+	fclose($fe);
 	return $result;
 }
 
 // 取得當篇文章的html
 function fetch_article_html($board_name, $id)
 {
+	$fe = fopen('php://stderr', 'w');
 	$result = null;
 	$url = "https://www.ptt.cc/bbs/{$board_name}/{$id}.html";
 	$opts = array(
@@ -155,21 +163,22 @@ function fetch_article_html($board_name, $id)
 		$headers = get_headers($url);
 		$response = substr($headers[0], 9, 3);
 		if ($response == "404") {
-			echo "response 404..., this article will be skipped \n";
+			fwrite($fe, "response 404..., this article will be skipped \n");
 			$error_count = 4;
 		} else {
-			echo "connection error, retry... \n";
+			fwrite($fe, "connection error, retry... \n");
 			sleep(ERROR_SLEEP);
 			$error_count++;
 		}
 	}
-
+	fclose($fe);
 	return $result;
 }
 
 // 取得當篇文章的詳細資料
 function fetch_article($board_name, $id)
 {
+	$fe = fopen('php://stderr', 'w');
 	$dom = str_get_html(fetch_article_html($board_name, $id));
 	// 如果取得資料失敗, 回傳NULL
 	if ($dom == NULL) {
@@ -198,21 +207,23 @@ function fetch_article($board_name, $id)
 	if (!isset($result["article_id"])) {
 		return NULL;
 	}
-
+	fclose($fe);
 	return $result;
 }
 
 // 存入當篇文章的詳細資料
 function save_single_article($db, $board_name, $id)
 {
-	echo "fetching article id: " . $id . "\n";
+	$fe = fopen('php://stderr', 'w');
+	fwrite($fe, "fetching article id: " . $id . "\n");
 	$insert_data = fetch_article($board_name, $id);
 	// 過濾詭異文章
 	if ($insert_data == NULL) {
-		echo "notice! article: " . $id ." was skipped \n";
+		fwrite($fe, "notice! article: " . $id ." was skipped \n");
 	} else {
 		$db->InsertArticle($insert_data, $board_name);
 	}
+	fclose($fe);
 	sleep(ARTICLE_SLEEP);
 }
 
