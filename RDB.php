@@ -52,4 +52,19 @@ class RDB extends Database
         $query->execute($bind);
     }
 
+    /**
+     * 判斷文章是否已存在
+     */
+    public function IsArticle($id)
+    {
+        $sql = "SELECT post_id FROM ptt_list WHERE post_id = :post_id";
+        $bind["post_id"] = $id;
+        $query = $this->db->prepare($sql);
+        $query->execute($bind);
+
+        $result = $query->fetchAll();
+
+        return (count($result) == 0) ? FALSE : $result;
+    }
+
 }

@@ -2,6 +2,12 @@
 require 'Parser.php';
 require 'RDB.php';
 
+CONST LIST_SLEEP = 0; // 每頁抓完間隔時間
+CONST ARTICLE_SLEEP = 0; // 每篇抓完間隔時間
+CONST ERROR_SLEEP = 2; // 連線失敗間隔時間
+CONST TIMEOUT = 10; // 連線送出timeout
+CONST LAST_DATE = "2014-10-01"; // 抓取文章的最舊日期
+
 $board_name = null;
 if (isset($argv[1])) {
 	$board_name = $argv[1];
@@ -12,10 +18,7 @@ if (isset($argv[1])) {
 $db = new RDB();
 
 fetch_board($db, $board_name);
-//save_article($db, $board_name);
 echo "fetch finished! \n";
-
-
 
 // 取得該board所有文章基本資料
 function fetch_board($db, $board_name)
@@ -24,13 +27,28 @@ function fetch_board($db, $board_name)
 	$last_page = page_count($board_name, null) + 1;
 	echo "fetching board... \n";
 	echo "total page: " . $last_page . "\n";
+	$expired = false;
 	for ($i= $last_page; $i >= 1 ; $i--) {
 		echo "fetching page: " . $i ."\n";
 		$fetch_data = fetch_item($board_name, $i);
+		// 檢測文章是否過期
+		if ($expired) {
+			echo "articles are expired! stop fetching... \n";
+			break;
+		}
 		foreach($fetch_data as $item) {
 			// 過濾失敗文章
 			if ($fetch_data == NULL) {
 				echo "notice! list: " . $i ." was skipped \n";
+				continue;
+			// 略過已抓過的文章
+			} else if ($db->IsArticle($item["url"])) {
+				echo "notice! article: " . $item["url"] ." has been in database \n";
+				continue;
+			// 略過已過期文章
+			} else if (is_date_over($item["date"])) {
+				echo "notice! article: " . $item["url"] ." has been expired \n";
+				$expired = true;
 				continue;
 			}
 			$db->InsertList($item, $board_name);
@@ -43,7 +61,7 @@ function fetch_board($db, $board_name)
 				}
 			}
 		}
-		//sleep(0.5);
+		sleep(LIST_SLEEP);
 	}
 }
 
@@ -95,7 +113,7 @@ function fetch_page_html($board_name, $index = null)
 	$opts = array(
 		'http'=>array(
 			'method' => "GET",
-			'timeout'=> 10,
+			'timeout'=> TIMEOUT,
 			'header' => "Accept-language: zh-TW\r\n",
 			'User-Agent' => "Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; rv:11.0) like Gecko" .
 			"Cookie: over18=1\r\n"
@@ -107,16 +125,12 @@ function fetch_page_html($board_name, $index = null)
 	while ($error_count < 3 && ($result = @file_get_contents($url, false, $context)) == false)
 	{
 		echo "connection error, retry... \n";
-		sleep(2);
+		sleep(ERROR_SLEEP);
 		$error_count++;
 	}
 
 	return $result;
 }
-
-/*
- * 此區段以下開始抓每篇文章詳細資料
-*/
 
 // 取得當篇文章的html
 function fetch_article_html($board_name, $id)
@@ -126,7 +140,7 @@ function fetch_article_html($board_name, $id)
 	$opts = array(
 		'http'=>array(
 			'method' => "GET",
-			'timeout'=> 10,
+			'timeout'=> TIMEOUT,
 			'header' => "Accept-language: zh-TW\r\n",
 			'User-Agent' => "Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; rv:11.0) like Gecko" .
 			"Cookie: over18=1\r\n"
@@ -145,7 +159,7 @@ function fetch_article_html($board_name, $id)
 			$error_count = 4;
 		} else {
 			echo "connection error, retry... \n";
-			sleep(2);
+			sleep(ERROR_SLEEP);
 			$error_count++;
 		}
 	}
@@ -176,8 +190,8 @@ function fetch_article($board_name, $id)
 	foreach($dom->find('div[id=main-container]') as $element) {
 		$result["article_content"] = strip_tags(trim($element));
 		$pos_1 = strpos($result["article_content"], @$result["article_time"]);
-		$pos_2 = strpos($result["article_content"], "-- ※ 發信站");
-		$result["article_content"] = substr($result["article_content"], $pos_1 + strlen(@$result["article_time"]), $pos_2 - $pos_1 - 24);
+		$pos_2 = strpos($result["article_content"], "※ 發信站");
+		$result["article_content"] = substr($result["article_content"], $pos_1 + strlen(@$result["article_time"]), $pos_2 - $pos_1 - 28);
 	}
 
 	// 過濾詭異文章
@@ -187,35 +201,26 @@ function fetch_article($board_name, $id)
 
 	return $result;
 }
-/*
-// 存入每篇文章的詳細資料
-function save_article($db, $board_name)
-{
-	$list = $db->GetList($board_name);
-	foreach ($list as $post) {
-		echo "fetching article id: " . $post->post_id . "\n";
-		$insert_data = fetch_article($board_name, $post->post_id);
-		// 過濾詭異文章
-		if ($insert_data == NULL) {
-			echo "notice! article: " . $post->post_id ." was skipped \n";
-			continue;
-		}
-		$db->InsertArticle($insert_data, $board_name);
-		//sleep(0.5);
-	}
-}*/
 
 // 存入當篇文章的詳細資料
 function save_single_article($db, $board_name, $id)
 {
 	echo "fetching article id: " . $id . "\n";
 	$insert_data = fetch_article($board_name, $id);
-		// 過濾詭異文章
+	// 過濾詭異文章
 	if ($insert_data == NULL) {
 		echo "notice! article: " . $id ." was skipped \n";
 	} else {
 		$db->InsertArticle($insert_data, $board_name);
 	}
-	//sleep(0.5);
+	sleep(ARTICLE_SLEEP);
+}
+
+function is_date_over($article_date)
+{
+	date_default_timezone_set("Asia/Taipei");
+	//date('D M d H:i:s Y')
+
+	return (strtotime(date($article_date)) <= strtotime(LAST_DATE)) ? TRUE : FALSE;
 }
 ?>
