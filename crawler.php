@@ -7,13 +7,15 @@ CONST ARTICLE_SLEEP = 0; // 每篇抓完間隔時間
 CONST ERROR_SLEEP = 2; // 連線失敗間隔時間
 CONST TIMEOUT = 10; // 連線送出timeout
 CONST LAST_DATE = "2014-10-01"; // 抓取文章的最舊日期
+CONST IS_LAST = TRUE; // 設定是否只抓到上次的最後一篇
 
 $board_name = null;
+
 if (isset($argv[1])) {
 	$board_name = $argv[1];
 } else {
 	$fe = fopen('php://stderr', 'w');
-	fwrite($fe, "usage: php crawler.php {Board Name} \n");
+	fwrite($fe, "usage: php crawler.php {Board Name} --last=true\n");
 	fclose($fe);
 	exit();
 }
@@ -33,12 +35,17 @@ function fetch_board($db, $board_name)
 	$last_page = page_count($board_name, null) + 1;
 	fwrite($fe, "total page: " . $last_page . "\n");
 	$expired = false;
+	$is_last = false;
 	for ($i= $last_page; $i >= 1 ; $i--) {
 		fwrite($fe, "fetching page: " . $i ."\n");
 		$fetch_data = fetch_item($board_name, $i);
 		// 檢測文章是否過期
 		if ($expired) {
 			fwrite($fe, "articles are expired! stop fetching... \n");
+			break;
+		// 檢查是否已經抓到上次的最後一篇
+		} else if ($is_last) {
+			fwrite($fe, "no more lastest pages! stop fetching... \n");
 			break;
 		}
 		foreach($fetch_data as $item) {
@@ -49,6 +56,10 @@ function fetch_board($db, $board_name)
 			// 略過已抓過的文章
 			} else if ($db->IsArticle($item["url"])) {
 				fwrite($fe, "notice! article: " . $item["url"] ." has been in database \n");
+				if (IS_LAST) {
+					$is_last = TRUE;
+					break;
+				}
 				continue;
 			// 略過已過期文章
 			} else if (is_date_over($item["date"])) {
@@ -99,6 +110,11 @@ function fetch_item($board_name, $index)
 		if ($count % 3 == 1) {
 			$post_temp["url"] = str_replace(array("/bbs/" . $board_name . "/", ".html"), "", $element->href);
 			$post_temp["title"] = $element->plaintext;
+			// 過濾被刪除文章
+			if (empty($post_temp["url"])) {
+				$post_temp = array();
+				$count = 0;
+			}
 		} else if ($count % 3 == 2) {
 			$post_temp["date"] = $element->plaintext;
 		} else {
@@ -121,9 +137,8 @@ function fetch_page_html($board_name, $index = null)
 		'http'=>array(
 			'method' => "GET",
 			'timeout'=> TIMEOUT,
-			'header' => "Accept-language: zh-TW\r\n",
-			'User-Agent' => "Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; rv:11.0) like Gecko" .
-			"Cookie: over18=1\r\n"
+			'header' => "Accept-language: zh-TW\r\n" . "Cookie: over18=1\r\n",
+			'User-Agent' => "Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; rv:11.0) like Gecko"
 			)
 		);
 	$context = stream_context_create($opts);
@@ -149,9 +164,8 @@ function fetch_article_html($board_name, $id)
 		'http'=>array(
 			'method' => "GET",
 			'timeout'=> TIMEOUT,
-			'header' => "Accept-language: zh-TW\r\n",
-			'User-Agent' => "Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; rv:11.0) like Gecko" .
-			"Cookie: over18=1\r\n"
+			'header' => "Accept-language: zh-TW\r\n" . "Cookie: over18=1\r\n",
+			'User-Agent' => "Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; rv:11.0) like Gecko"
 			)
 		);
 	$context = stream_context_create($opts);

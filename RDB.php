@@ -25,19 +25,6 @@ class RDB extends Database
     }
 
     /**
-     * Get List
-     */
-    public function GetList($board)
-    {
-        $sql = "SELECT * FROM ptt_list WHERE post_board = :post_board";
-        $bind["post_board"] = $board;
-        $query = $this->db->prepare($sql);
-        $query->execute($bind);
-
-        return $query->fetchAll();
-    }
-
-    /**
      * Insert Article
      */
     public function InsertArticle($array, $board_name)
@@ -64,7 +51,6 @@ class RDB extends Database
 
         $result = $query->fetchAll();
 
-        return (count($result) == 0) ? FALSE : $result;
+        return (count($result) == 0) ? FALSE : TRUE;
     }
-
 }
