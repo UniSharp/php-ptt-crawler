@@ -1,4 +1,5 @@
 <?php
+
 class Database
 {
 	public $db = null;
@@ -26,4 +27,3 @@ class Database
 
 	}
 }
-?>
