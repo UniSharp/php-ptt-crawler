@@ -1,7 +1,5 @@
 <?php
-require 'Parser.php';
-require 'RDB.php';
-require 'PttCrawler.php';
+require 'bootstrap.php';
 
 $board_name = null;
 if (isset($argv[1])) {

@@ -1,16 +1,17 @@
 <?php
+require 'Parser.php';
 
 class PttCrawler
 {
-	private $db = null; // DB物件
+	private $storage = null; // Storage物件
 	private $board_name = null; // 版名
 	private $config = array(); // 設定參數陣列
 
-	public function __construct($db, $board_name)
+	public function __construct($storage, $board_name)
 	{
 		date_default_timezone_set("Asia/Taipei");
 
-		$this->db = $db;
+		$this->storage = $storage;
 		$this->board_name = $board_name;
 		$this->set_config(null);
 	}
@@ -28,7 +29,7 @@ class PttCrawler
 		// 抓取文章的最後日期
 		$this->config["last_date"] = (!isset($config["last_date"])) ? date("Y-m-d") : $config["last_date"];
 		// 設定是否只抓到上次的最後一篇
-		$this->config["is_last_date"] = (!isset($config["is_last_date"])) ? TRUE : $config["is_last_date"];
+		$this->config["is_last_date"] = (!isset($config["is_last_date"])) ? true : $config["is_last_date"];
 	}
 
 	// 主程式邏輯
@@ -46,7 +47,7 @@ class PttCrawler
 			$current_page = $this->fetch_page($i);
 
 			// 過濾失敗文章
-			if ($current_page == NULL) {
+			if ($current_page == null) {
 				$this->error_output("notice! list: " . $i . " was skipped \n");
 				continue;
 			}
@@ -54,7 +55,7 @@ class PttCrawler
 			$save_article_arr = array();
 			foreach ($current_page as $item) {
 				// 略過已抓過的文章
-				if ($this->db->GetArticleByUrl($item["url"])) {
+				if ($this->storage->GetArticleByUrl($item["url"])) {
 					$this->error_output("notice! article: " . $item["url"] . " has been in database \n");
 					// 檢查是否抓到上次最後一篇
 					if ($this->config["is_last_date"]) {
@@ -71,7 +72,7 @@ class PttCrawler
 				// 存入要抓取詳細資料的article陣列
 				array_push($save_article_arr, $item);
 				// 存入每頁文章基本資料
-				$this->db->InsertList($item, $this->board_name);
+				$this->storage->InsertList($item, $this->board_name);
 				sleep($this->config["list_sleep"]);
 			}
 
@@ -80,12 +81,12 @@ class PttCrawler
 				// 取得每筆文章詳細資料
 				$article = $this->fetch_article($item["url"]);
 				// 過濾詭異文章
-				if ($article == NULL) {
+				if ($article == null) {
 					$this->error_output("notice! article: " . $item["url"] . " was skipped \n");
 					continue;
 				}
 				// 存入每筆文章詳細資料(returned id)
-				$this->db->InsertArticle($article, $this->board_name);
+				$this->storage->InsertArticle($article, $this->board_name);
 				sleep($this->config["article_sleep"]);
 			}
 		}
@@ -118,8 +119,8 @@ class PttCrawler
 		$this->error_output("fetching page: " . $index . "\n");
 		$dom = str_get_html($this->fetch_page_html($index));
 		// 如果取得資料失敗, 回傳NULL
-		if ($dom == NULL) {
-			return NULL;
+		if ($dom == null) {
+			return null;
 		}
 		$result = array();
 		$post_temp = array();
@@ -153,6 +154,7 @@ class PttCrawler
 		$url = "https://www.ptt.cc/bbs/{$this->board_name}/index{$index}.html";
 		$context = $this->init_opts();
 
+		// 連線逾時超過三次, 回傳NULL
 		$error_count = 0;
 		while ($error_count < 3 && ($result = @file_get_contents($url, false, $context)) == false) {
 			$this->error_output("connection error, retry... \n");
@@ -172,10 +174,10 @@ class PttCrawler
 		// 連線逾時超過三次, 回傳NULL
 		$error_count = 0;
 		while ($error_count < 3 && ($result = @file_get_contents($url, false, $context)) == false) {
-			$response = substr($http_response_header[0], 9, 3);
+			$response = substr(@$http_response_header[0], 9, 3);
 			if ($response == "404") {
 				$this->error_output("response 404..., this article will be skipped \n");
-				$error_count = 4;
+				break;
 			} else {
 				$this->error_output("connection error, retry... \n");
 				sleep($this->config["error_sleep"]);
@@ -191,7 +193,7 @@ class PttCrawler
 		$dom = str_get_html($this->fetch_article_html($id));
 
 		// 如果取得資料失敗, 回傳NULL
-		if ($dom == NULL) {
+		if ($dom == null) {
 			return $dom;
 		}
 		$result = array();
@@ -215,14 +217,14 @@ class PttCrawler
 
 		// 過濾詭異文章
 		if (!isset($result["article_id"])) {
-			return NULL;
+			return null;
 		}
 		return $result;
 	}
 
 	private function is_date_over($article_date)
 	{
-		return (strtotime(date($article_date)) <= strtotime('-1 day', strtotime($this->config["last_date"]))) ? TRUE : FALSE;
+		return (strtotime(date($article_date)) <= strtotime('-1 day', strtotime($this->config["last_date"]))) ? true : false;
 	}
 
 	private function init_opts()

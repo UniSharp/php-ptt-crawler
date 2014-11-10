@@ -1,7 +1,6 @@
 <?php
-require 'Database.php';
 
-class RDB extends Database
+class RDB extends Database implements Storage
 {
 
 	function __construct()
@@ -12,11 +11,11 @@ class RDB extends Database
 	/**
 	 * Insert List
 	 */
-	public function InsertList($array, $board)
+	public function InsertList($array, $board_name)
 	{
 		$sql = "INSERT INTO ptt_list (post_id, post_board, post_title, post_date, post_author) VALUES (:post_id, :post_board, :post_title, :post_date, :post_author)";
 		$bind["post_id"] = $array["url"];
-		$bind["post_board"] = $board;
+		$bind["post_board"] = $board_name;
 		$bind["post_title"] = $array["title"];
 		$bind["post_date"] = $array["date"];
 		$bind["post_author"] = $array["author"];

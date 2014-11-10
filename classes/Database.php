@@ -24,6 +24,5 @@ class Database
 		} catch (PDOException $e) {
 			exit("database connection error");
 		}
-
 	}
 }
