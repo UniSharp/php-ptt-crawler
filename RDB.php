@@ -35,22 +35,25 @@ class RDB extends Database
 		$bind["article_author"] = $array["article_author"];
 		$bind["article_content"] = $array["article_content"];
 		$bind["article_time"] = $array["article_time"];
+
 		$query = $this->db->prepare($sql);
 		$query->execute($bind);
+
+		return $this->db->lastInsertId();
 	}
 
 	/**
 	 * 判斷文章是否已存在
 	 */
-	public function IsArticle($id)
+	public function GetArticleByUrl($id)
 	{
-		$sql = "SELECT post_id FROM ptt_list WHERE post_id = :post_id";
+		$sql = "SELECT COUNT(post_id) as count FROM ptt_list WHERE post_id = :post_id";
 		$bind["post_id"] = $id;
+
 		$query = $this->db->prepare($sql);
 		$query->execute($bind);
+		$result = $query->fetch();
 
-		$result = $query->fetchAll();
-
-		return (count($result) == 0) ? FALSE : TRUE;
+		return $result->count;
 	}
 }
