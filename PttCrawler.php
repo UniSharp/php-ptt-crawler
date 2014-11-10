@@ -35,13 +35,13 @@ class PttCrawler
 	public function main()
 	{
 		$is_to_date = false;
-		$is_last = false;
+		$is_repeated = false;
 		// 取得總頁數
 		$last_page = $this->page_count();
 
 		for ($i = $last_page; $i >= 1; $i--) {
 			// 檢查爬蟲是否該繼續爬資料
-			if ($is_to_date || $is_last) break;
+			if ($is_to_date || $is_repeated) break;
 			// 取得每頁文章基本資料
 			$current_page = $this->fetch_page($i);
 
@@ -58,11 +58,11 @@ class PttCrawler
 					$this->error_output("notice! article: " . $item["url"] . " has been in database \n");
 					// 檢查是否抓到上次最後一篇
 					if ($this->config["is_last_date"]) {
-						$is_last = true;
+						$is_repeated = true;
 					}
 					continue;
 				}
-				// 略過已到期文章
+				// 略過已到設定日期文章
 				if ($this->is_date_over($item["date"])) {
 					$this->error_output("notice! article: " . $item["url"] . " is earlier than " . $this->config["last_date"] . " \n");
 					$is_to_date = true;
@@ -71,7 +71,8 @@ class PttCrawler
 				// 存入要抓取詳細資料的article陣列
 				array_push($save_article_arr, $item);
 				// 存入每頁文章基本資料
-				$this->save_single_list($item);
+				$this->db->InsertList($item, $this->board_name);
+				sleep($this->config["list_sleep"]);
 			}
 
 			foreach ($save_article_arr as $item) {
@@ -84,16 +85,15 @@ class PttCrawler
 					continue;
 				}
 				// 存入每筆文章詳細資料(returned id)
-				$this->save_single_article($article);
-				// 清空article陣列
-				$save_article_arr = array();
+				$this->db->InsertArticle($article, $this->board_name);
+				sleep($this->config["article_sleep"]);
 			}
 		}
 		// 檢測文章是否到期
 		if ($is_to_date) {
 			$this->error_output("articles are earlier than " . $this->config["last_date"] . ", stop fetching... \n");
 		// 檢查是否已經抓到上次的最後一篇
-		} else if ($is_last) {
+		} else if ($is_repeated) {
 			$this->error_output("no more lastest pages! stop fetching... \n");
 		}
 		$this->error_output("fetch finished! \n");
@@ -172,8 +172,7 @@ class PttCrawler
 		// 連線逾時超過三次, 回傳NULL
 		$error_count = 0;
 		while ($error_count < 3 && ($result = @file_get_contents($url, false, $context)) == false) {
-			$headers = get_headers($url);
-			$response = substr($headers[0], 9, 3);
+			$response = substr($http_response_header[0], 9, 3);
 			if ($response == "404") {
 				$this->error_output("response 404..., this article will be skipped \n");
 				$error_count = 4;
@@ -190,27 +189,28 @@ class PttCrawler
 	private function fetch_article($id)
 	{
 		$dom = str_get_html($this->fetch_article_html($id));
+
 		// 如果取得資料失敗, 回傳NULL
 		if ($dom == NULL) {
 			return $dom;
 		}
 		$result = array();
-		$count = 0;
-		foreach ($dom->find('span[class=article-meta-value]') as $element) {
-			$count++;
-			if ($count % 4 == 0) {
-				$result["article_id"] = $id;
-				$result["article_time"] = trim($element->plaintext);
-			} elseif ($count % 4 == 1) {
-				$result["article_author"] = trim($element->plaintext);
-			}
-		}
-		// 取得內文
+
+		// 取得文章內容
 		foreach ($dom->find('div[id=main-container]') as $element) {
-			$result["article_content"] = strip_tags(trim($element));
-			$pos_1 = strpos($result["article_content"], @$result["article_time"]);
-			$pos_2 = strpos($result["article_content"], "※ 發信站");
-			$result["article_content"] = substr($result["article_content"], $pos_1 + strlen(@$result["article_time"]), $pos_2 - $pos_1 - 28);
+			$content = strip_tags(trim($element));
+
+			$result["article_id"] = $id;
+			$pos_1 = strpos($content, "作者");
+			$pos_2 = strpos($content, "看板");
+			$result["article_author"] = substr($content, $pos_1 + 6, $pos_2 - 11);
+
+			$pos_1 = strpos($content, "時間");
+			$result["article_time"] = substr($content, $pos_1 + 6, 24);
+
+			$pos_1 = strpos($content, @$result["article_time"]);
+			$pos_2 = strpos($content, "※ 發信站");
+			$result["article_content"] = substr($content, $pos_1 + strlen(@$result["article_time"]), $pos_2 - $pos_1 - 28);
 		}
 
 		// 過濾詭異文章
@@ -218,20 +218,6 @@ class PttCrawler
 			return NULL;
 		}
 		return $result;
-	}
-
-	// 存入單頁文章基本資料
-	private function save_single_list($item)
-	{
-		$this->db->InsertList($item, $this->board_name);
-		sleep($this->config["list_sleep"]);
-	}
-
-	// 存入當篇文章的詳細資料
-	private function save_single_article($insert_data)
-	{
-		$this->db->InsertArticle($insert_data, $this->board_name);
-		sleep($this->config["article_sleep"]);
 	}
 
 	private function is_date_over($article_date)
