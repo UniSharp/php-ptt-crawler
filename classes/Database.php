@@ -18,9 +18,27 @@ class Database
 		define("DB_USER", "albert");
 		define("DB_PASS", "albert");
 
+		// error code of PDO
+		define("SERVER_SHUTDOWN_CODE", "1053");
+
 		$options = array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8', PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ, PDO::ATTR_ERRMODE => PDO::ERRMODE_WARNING);
 		try {
 			$this->db = new PDO(DB_TYPE . ':host=' . DB_HOST . ';dbname=' . DB_NAME, DB_USER, DB_PASS, $options);
+			$this->db->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+            $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		} catch (PDOException $e) {
+			exit("database connection error");
+		}
+	}
+
+	public function reconnectPDO()
+	{
+		$this->db = null;
+		$options = array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8', PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ, PDO::ATTR_ERRMODE => PDO::ERRMODE_WARNING);
+		try {
+			$this->db = new PDO(DB_TYPE . ':host=' . DB_HOST . ';dbname=' . DB_NAME, DB_USER, DB_PASS, $options);
+			$this->db->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+            $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 		} catch (PDOException $e) {
 			exit("database connection error");
 		}

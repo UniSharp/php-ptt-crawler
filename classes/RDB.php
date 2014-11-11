@@ -19,8 +19,12 @@ class RDB extends Database implements Storage
 		$bind["post_title"] = $array["title"];
 		$bind["post_date"] = $array["date"];
 		$bind["post_author"] = $array["author"];
-		$query = $this->db->prepare($sql);
-		$query->execute($bind);
+		try {
+			$query = $this->db->prepare($sql);
+			$query->execute($bind);
+		} catch (PDOException $e) {
+			throw $e;
+		}
 	}
 
 	/**
@@ -35,8 +39,20 @@ class RDB extends Database implements Storage
 		$bind["article_content"] = $array["article_content"];
 		$bind["article_time"] = $array["article_time"];
 
-		$query = $this->db->prepare($sql);
-		$query->execute($bind);
+		$count = 0;
+		while($count < 3) {
+			try {
+				$query = $this->db->prepare($sql);
+				$query->execute($bind);
+				$count = 3;
+			} catch (PDOException $e) {
+				if ($e->errorInfo[1] == SERVER_SHUTDOWN_CODE) {
+						$count++;
+						$this->reconnectPDO();
+					}
+				throw $e;
+			}
+		}
 
 		return $this->db->lastInsertId();
 	}
@@ -49,8 +65,12 @@ class RDB extends Database implements Storage
 		$sql = "SELECT COUNT(post_id) as count FROM ptt_list WHERE post_id = :post_id";
 		$bind["post_id"] = $id;
 
-		$query = $this->db->prepare($sql);
-		$query->execute($bind);
+		try {
+			$query = $this->db->prepare($sql);
+			$query->execute($bind);
+		} catch (PDOException $e) {
+			throw $e;
+		}
 		$result = $query->fetch();
 
 		return $result->count;

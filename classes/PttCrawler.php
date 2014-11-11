@@ -19,9 +19,9 @@ class PttCrawler
 	public function set_config($config)
 	{
 		// 每頁清單抓完間隔時間
-		$this->config["list_sleep"] = (!isset($config["list_sleep"])) ? 0 : $config["list_sleep"];
+		$this->config["list_sleep"] = (!isset($config["list_sleep"])) ? 0.5 : $config["list_sleep"];
 		// 每篇文章抓完間隔時間
-		$this->config["article_sleep"] = (!isset($config["article_sleep"])) ? 0 : $config["article_sleep"];
+		$this->config["article_sleep"] = (!isset($config["article_sleep"])) ? 2 : $config["article_sleep"];
 		// 連線失敗間隔時間
 		$this->config["error_sleep"] = (!isset($config["error_sleep"])) ? 2 : $config["error_sleep"];
 		// 連線送出timeout
@@ -32,8 +32,15 @@ class PttCrawler
 		$this->config["is_last_date"] = (!isset($config["is_last_date"])) ? true : $config["is_last_date"];
 	}
 
+	// 供外部程式呼叫執行
+	public function run()
+	{
+		$this->main();
+		exit(0);
+	}
+
 	// 主程式邏輯
-	public function main()
+	private function main()
 	{
 		$is_to_date = false;
 		$is_repeated = false;
@@ -72,7 +79,14 @@ class PttCrawler
 				// 存入要抓取詳細資料的article陣列
 				array_push($save_article_arr, $item);
 				// 存入每頁文章基本資料
-				$this->storage->InsertList($item, $this->board_name);
+				try {
+					$this->storage->InsertList($item, $this->board_name);
+				} catch (PDOException $e) {
+					if ($e->errorInfo[1] == SERVER_SHUTDOWN_CODE) {
+						exit("mysql server connection error!");
+						// todo
+					}
+				}
 				sleep($this->config["list_sleep"]);
 			}
 
@@ -86,7 +100,14 @@ class PttCrawler
 					continue;
 				}
 				// 存入每筆文章詳細資料(returned id)
-				$this->storage->InsertArticle($article, $this->board_name);
+				try {
+					$this->storage->InsertArticle($article, $this->board_name);
+				} catch (PDOException $e) {
+					if ($e->errorInfo[1] == SERVER_SHUTDOWN_CODE) {
+						exit("mysql server connection error!");
+						// todo
+					}
+				}
 				sleep($this->config["article_sleep"]);
 			}
 		}
@@ -98,6 +119,7 @@ class PttCrawler
 			$this->error_output("no more lastest pages! stop fetching... \n");
 		}
 		$this->error_output("fetch finished! \n");
+		return true;
 	}
 
 	// 取得該版總頁數
@@ -212,7 +234,11 @@ class PttCrawler
 
 			$pos_1 = strpos($content, @$result["article_time"]);
 			$pos_2 = strpos($content, "※ 發信站");
-			$result["article_content"] = substr($content, $pos_1 + strlen(@$result["article_time"]), $pos_2 - $pos_1 - 28);
+			$result["article_content"] = substr($content, $pos_1 + strlen(@$result["article_time"]) + 1, $pos_2 - $pos_1 - 28);
+			$result["article_content"] = str_replace(
+				array('&#34;', '&lt;' ,'&gt;'),
+				array('"', '<', '>'),
+				$result["article_content"]);
 		}
 
 		// 過濾詭異文章

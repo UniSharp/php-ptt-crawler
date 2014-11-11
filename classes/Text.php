@@ -13,7 +13,7 @@ class Text implements Storage
 	 */
 	public function InsertList($array, $board_name)
 	{
-		// todo
+		// do nothing
 	}
 
 	/**
@@ -21,7 +21,10 @@ class Text implements Storage
 	 */
 	public function InsertArticle($array, $board_name)
 	{
-		// todo
+		echo "url: https://www.ptt.cc/bbs/{$board_name}/{$array["article_id"]}.html \n";
+		echo "author: {$array["article_author"]} \n";
+		echo "time: {$array["article_time"]} \n";
+		echo "content: {$array["article_content"]} \n";
 	}
 
 	/**

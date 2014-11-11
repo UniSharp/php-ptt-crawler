@@ -8,11 +8,11 @@ if (isset($argv[1])) {
 	$fe = fopen('php://stderr', 'w');
 	fwrite($fe, "usage: php crawler.php {Board Name} --last=true\n");
 	fclose($fe);
-	exit();
+	exit(1);
 }
 
 $db = new RDB();
 $PttCrawler = new PttCrawler($db, $board_name);
 $PttCrawler->set_config(array(
-	"last_date" => "2014-11-08"));
-$PttCrawler->main();
+	"last_date" => "2014-11-11"));
+$PttCrawler->run();
