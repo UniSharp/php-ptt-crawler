@@ -49,4 +49,7 @@ $PttCrawler->set_config(
 		"stop-on-duplicate" => isset($options['stop-on-duplicate']) ? true : null,
 	)
 );
-$PttCrawler->run();
+
+$return_code = $PttCrawler->run();
+
+exit($return_code);

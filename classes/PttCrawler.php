@@ -38,8 +38,12 @@ class PttCrawler
 	// 供外部程式呼叫執行
 	public function run()
 	{
-		$this->main();
-		exit(0);
+		if ($this->main()) {
+			return 0;
+		} else {
+			return 1;
+		}
+
 	}
 
 	// 主程式邏輯
