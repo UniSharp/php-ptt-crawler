@@ -1,6 +1,6 @@
 <?php
 
-interface Storage {
+interface StorageInterface {
 
     /**
      * Insert List

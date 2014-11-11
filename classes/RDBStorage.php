@@ -1,6 +1,6 @@
 <?php
 
-class RDB extends Database implements Storage
+class RDBStorage extends Database implements StorageInterface
 {
 
 	function __construct()

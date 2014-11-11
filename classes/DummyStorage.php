@@ -1,6 +1,6 @@
 <?php
 
-class Text implements Storage
+class DummyStorage implements StorageInterface
 {
 
 	function __construct()

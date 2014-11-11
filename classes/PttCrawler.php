@@ -10,7 +10,7 @@ class PttCrawler
 	const STATE_DUPLICATED = 0x01;
 	const STATE_DATE_REACHED = 0x02;
 
-	public function __construct($storage, $board_name)
+	public function __construct(StorageInterface $storage, $board_name)
 	{
 		date_default_timezone_set("Asia/Taipei");
 
@@ -33,7 +33,6 @@ class PttCrawler
 		$this->config["stop-date"] = (!isset($config["stop-date"])) ? date("Y-m-d") : $config["stop-date"];
 		// 設定是否只抓到上次的最後一篇
 		$this->config["stop-on-duplicate"] = (!isset($config["stop-on-duplicate"])) ? true : $config["stop-on-duplicate"];
-		var_dump($this->config);
 	}
 
 	// 供外部程式呼叫執行

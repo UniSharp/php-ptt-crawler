@@ -37,7 +37,7 @@ EOF;
 
 $board_name = $options['board'];
 
-$db = new RDB();
+$db = new RDBStorage();
 $PttCrawler = new PttCrawler($db, $board_name);
 $PttCrawler->set_config(
 	array(
