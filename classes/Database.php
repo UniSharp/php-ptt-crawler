@@ -15,8 +15,8 @@ class Database
 		define("DB_TYPE", "mysql");
 		define("DB_HOST", "127.0.0.1");
 		define("DB_NAME", "ptt_crawler");
-		define("DB_USER", "albert");
-		define("DB_PASS", "albert");
+		define("DB_USER", "root");
+		define("DB_PASS", "");
 
 		// error code of PDO
 		define("SERVER_SHUTDOWN_CODE", "1053");

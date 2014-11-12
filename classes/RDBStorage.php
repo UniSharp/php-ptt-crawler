@@ -13,16 +13,17 @@ class RDBStorage extends Database implements StorageInterface
 	 */
 	public function InsertList($array, $board_name)
 	{
-		$sql = "INSERT INTO ptt_list (post_id, post_board, post_title, post_date, post_author) VALUES (:post_id, :post_board, :post_title, :post_date, :post_author)";
-		$bind["post_id"] = $array["url"];
-		$bind["post_board"] = $board_name;
-		$bind["post_title"] = $array["title"];
-		$bind["post_date"] = $array["date"];
-		$bind["post_author"] = $array["author"];
+		$sql = 'INSERT INTO list (id, forum, title, `date`, author) VALUES (:id, :forum, :title, :date, :author)';
+		$bind["id"] = $array["url"];
+		$bind["forum"] = $board_name;
+		$bind["title"] = $array["title"];
+		$bind["date"] = $array["date"];
+		$bind["author"] = $array["author"];
 		try {
 			$query = $this->db->prepare($sql);
 			$query->execute($bind);
 		} catch (PDOException $e) {
+			// FIXME useless trowing exception.
 			throw $e;
 		}
 	}
@@ -30,21 +31,21 @@ class RDBStorage extends Database implements StorageInterface
 	/**
 	 * Insert Article
 	 */
-	public function InsertArticle($array, $board_name)
+	public function InsertArticle($article_array, $board_name)
 	{
-		$sql = "INSERT INTO ptt_article (article_id, board_name, article_author, article_content, article_time) VALUES (:article_id, :board_name, :article_author, :article_content, :article_time)";
-		$bind["article_id"] = $array["article_id"];
-		$bind["board_name"] = $board_name;
-		$bind["article_author"] = $array["article_author"];
-		$bind["article_content"] = $array["article_content"];
-		$bind["article_time"] = $array["article_time"];
+		$sql = "INSERT INTO article (id, forum, author, content, `time`) VALUES (:id, :forum, :author, :content, :time)";
+		$bind["id"] = $article_array["article_id"];
+		$bind["forum"] = $board_name;
+		$bind["author"] = $article_array["article_author"];
+		$bind["content"] = $article_array["article_content"];
+		$bind["time"] = $article_array["article_time"];
 
 		$count = 0;
 		while($count < 3) {
 			try {
 				$query = $this->db->prepare($sql);
 				$query->execute($bind);
-				$count = 3;
+				$count = 3; // FIXME weird logic here
 			} catch (PDOException $e) {
 				if ($e->errorInfo[1] == SERVER_SHUTDOWN_CODE) {
 						$count++;
@@ -59,11 +60,12 @@ class RDBStorage extends Database implements StorageInterface
 
 	/**
 	 * 判斷文章是否已存在
+	 * FIXME werid in sementic
 	 */
 	public function GetArticleByUrl($id)
 	{
-		$sql = "SELECT COUNT(post_id) as count FROM ptt_list WHERE post_id = :post_id";
-		$bind["post_id"] = $id;
+		$sql = "SELECT COUNT(id) as count FROM list WHERE id = :id";
+		$bind["id"] = $id;
 
 		try {
 			$query = $this->db->prepare($sql);

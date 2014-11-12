@@ -28,14 +28,14 @@ USE `ptt_crawler`;
 -- 表的結構 `ptt_article`
 --
 
-CREATE TABLE IF NOT EXISTS `ptt_article` (
-  `article_id` varchar(25) NOT NULL,
-  `article_author` varchar(30) NOT NULL,
-  `article_content` text NOT NULL,
-  `article_time` varchar(25) NOT NULL,
+CREATE TABLE IF NOT EXISTS `article` (
+  `id` varchar(25) NOT NULL,
+  `forum` varchar(25) NOT NULL,
+  `author` varchar(30) NOT NULL,
+  `content` text NOT NULL,
+  `time` varchar(25) NOT NULL,
   `created_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `board_name` varchar(25) NOT NULL,
-  PRIMARY KEY (`article_id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -44,14 +44,14 @@ CREATE TABLE IF NOT EXISTS `ptt_article` (
 -- 表的結構 `ptt_list`
 --
 
-CREATE TABLE IF NOT EXISTS `ptt_list` (
-  `post_id` varchar(25) NOT NULL,
-  `post_board` varchar(25) NOT NULL,
-  `post_title` varchar(50) NOT NULL,
-  `post_date` varchar(10) NOT NULL,
-  `post_author` varchar(20) DEFAULT NULL,
-  `created_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`post_id`)
+CREATE TABLE IF NOT EXISTS `list` (
+  `id` varchar(25) NOT NULL,
+  `forum` varchar(25) NOT NULL,
+  `title` varchar(50) NOT NULL,
+  `date` varchar(10) NOT NULL,
+  `author` varchar(20) DEFAULT NULL,
+  `created_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

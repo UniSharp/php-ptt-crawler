@@ -94,7 +94,7 @@ class PttCrawler
 					if ($e->errorInfo[1] == SERVER_SHUTDOWN_CODE) {
 						exit("mysql server connection error!");
 						// todo
-					}
+					} // FIXME URGENT what else ?
 				}
 				sleep($this->config["list_sleep"]);
 			}
@@ -208,7 +208,7 @@ class PttCrawler
 		// 連線逾時超過三次, 回傳NULL
 		$error_count = 0;
 		while ($error_count < 3 && ($result = @file_get_contents($url, false, $context)) == false) {
-			$response = substr(@$http_response_header[0], 9, 3);
+			$response = substr(@$http_response_header[0], 9, 3); // FIXME use explode, do not use substr
 			if ($response == "404") {
 				$this->error_output("response 404..., this article will be skipped \n");
 				break;
@@ -233,9 +233,11 @@ class PttCrawler
 		$result = array();
 
 		// 取得文章內容
+		// FIXME don't use foreach. there will be only one main-container in a page.
 		foreach ($dom->find('div[id=main-container]') as $element) {
 			$content = strip_tags(trim($element));
 
+			// FIXME URGENT too ugly, use regexp and parsing line by line to improve performance
 			$result["article_id"] = $id;
 			$pos_1 = strpos($content, "作者");
 			$pos_2 = strpos($content, "看板");
