@@ -112,7 +112,7 @@ class PttCrawler
 				try {
 					$this->storage->InsertArticle($article, $this->board_name);
 				} catch (PDOException $e) {
-					if ($e->errorInfo[1] == SERVER_SHUTDOWN_CODE) {
+					if ($e->errorInfo[1] == SERVER_SHUTDOWN_CODE) { // FIXME just $e->getCode()
 						exit("mysql server connection error!");
 						// todo
 					}
@@ -162,8 +162,8 @@ class PttCrawler
 		foreach ($dom->find('div[class=title] a, div[class=date], div[class=author]') as $element) {
 			$count++;
 			$post = array();
-			if ($count % 3 == 1) {
-				$post_temp["url"] = str_replace(array("/bbs/" . $this->board_name . "/", ".html"), "", $element->href);
+			if ($count % 3 == 1) { // FIXME kind of ugly
+				$post_temp["url"] = str_replace(array("/bbs/" . $this->board_name . "/", ".html"), "", $element->href); // FIXME this should be called article_id instead of url
 				$post_temp["title"] = $element->plaintext;
 				// 過濾被刪除文章
 				if (empty($post_temp["url"])) {
@@ -191,7 +191,7 @@ class PttCrawler
 		// 連線逾時超過三次, 回傳NULL
 		$error_count = 0;
 		while ($error_count < 3 && ($result = @file_get_contents($url, false, $context)) == false) {
-			$this->error_output("connection error, retry... \n");
+			$this->error_output("connection error, retry... \n"); // FIXME what kind of error?
 			sleep($this->config["error_sleep"]);
 			$error_count++;
 		}
@@ -207,8 +207,8 @@ class PttCrawler
 
 		// 連線逾時超過三次, 回傳NULL
 		$error_count = 0;
-		while ($error_count < 3 && ($result = @file_get_contents($url, false, $context)) == false) {
-			$response = substr(@$http_response_header[0], 9, 3); // FIXME use explode, do not use substr
+		while ($error_count < 3 && ($result = @file_get_contents($url, false, $context)) == false) { // FIXME do not use @
+			$response = substr(@$http_response_header[0], 9, 3); // FIXME use explode, do not use substr, do not use @
 			if ($response == "404") {
 				$this->error_output("response 404..., this article will be skipped \n");
 				break;
@@ -246,9 +246,9 @@ class PttCrawler
 			$pos_1 = strpos($content, "時間");
 			$result["article_time"] = substr($content, $pos_1 + 6, 24);
 
-			$pos_1 = strpos($content, @$result["article_time"]);
+			$pos_1 = strpos($content, @$result["article_time"]); // FIXME do not use @
 			$pos_2 = strpos($content, "※ 發信站");
-			$result["article_content"] = substr($content, $pos_1 + strlen(@$result["article_time"]) + 1, $pos_2 - $pos_1 - 28);
+			$result["article_content"] = substr($content, $pos_1 + strlen(@$result["article_time"]) + 1, $pos_2 - $pos_1 - 28); // FIXME do not use @
 			$result["article_content"] = str_replace(
 				array('&#34;', '&lt;' ,'&gt;'),
 				array('"', '<', '>'),
