@@ -36,10 +36,11 @@ class RDBStorage extends Database implements StorageInterface
 	 */
 	public function InsertArticle($article_array, $board_name)
 	{
-		$sql = "INSERT INTO article (id, forum, author, content, `time`) VALUES (:id, :forum, :author, :content, :time)";
+		$sql = "INSERT INTO article (id, forum, author, nick, content, `time`) VALUES (:id, :forum, :author, :nick, :content, :time)";
 		$bind["id"] = $article_array["id"];
 		$bind["forum"] = $board_name;
 		$bind["author"] = $article_array["author"];
+		$bind["nick"] = $article_array["nick"];
 		$bind["content"] = $article_array["content"];
 		$bind["time"] = $article_array["time"];
 

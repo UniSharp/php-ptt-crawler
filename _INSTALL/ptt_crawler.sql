@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS `article` (
   `id` varchar(25) NOT NULL,
   `forum` varchar(25) NOT NULL,
   `author` varchar(13) NOT NULL,
+  `nick` varchar(10) DEFAULT NULL,
   `content` text NOT NULL,
   `time` varchar(25) NOT NULL, -- FIXME must use timestamp
   `created_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,

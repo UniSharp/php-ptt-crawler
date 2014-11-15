@@ -23,6 +23,7 @@ class DummyStorage implements StorageInterface
 	{
 		echo "url: https://www.ptt.cc/bbs/{$board_name}/{$array["id"]}.html\n";
 		echo "author: {$array["author"]}\n";
+		echo "nick: {$array["nick"]}\n";
 		echo "time: {$array["time"]}\n";
 		echo "content:\n{$array["content"]}\n";
 	}

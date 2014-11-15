@@ -252,7 +252,11 @@ class PttCrawler
 				$result["id"] = $id;
 				$result["time"] = trim($element->plaintext);
 			} elseif ($count % 4 == 1) {
-				$result["author"] = trim($element->plaintext);
+				$author_string = trim($element->plaintext);
+				$matches = array();
+				preg_match('/^(?P<author>.*) \((?P<nick>.*)\)/', $author_string, $matches);
+				$result['author'] = $matches['author'];
+				$result['nick'] = $matches['nick'];
 			}
 		}
 
