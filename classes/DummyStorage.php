@@ -39,10 +39,7 @@ class DummyStorage implements StorageInterface
 
 	}
 
-	/**
-	 * 判斷文章是否已存在
-	 */
-	public function GetArticleByUrl($id)
+	public function GetArticleByArticleId($article_id)
 	{
 		return false;
 	}

@@ -85,14 +85,10 @@ class RDBStorage extends Database implements StorageInterface
 		return $this->db->lastInsertId();
 	}
 
-	/**
-	 * 判斷文章是否已存在
-	 * FIXME werid in sementic
-	 */
-	public function GetArticleByUrl($id)
+	public function GetArticleByArticleId($article_id)
 	{
-		$sql = "SELECT COUNT(id) as count FROM list WHERE id = :id"; // FIXME must get from article not list
-		$bind["id"] = $id;
+		$sql = "SELECT * FROM article WHERE id = :article_id";
+		$bind["article_id"] = $article_id;
 
 		try {
 			$query = $this->db->prepare($sql);
@@ -100,8 +96,7 @@ class RDBStorage extends Database implements StorageInterface
 		} catch (PDOException $e) {
 			throw $e;
 		}
-		$result = $query->fetch();
-
-		return $result->count;
+		$result = $query->fetch(PDO::FETCH_ASSOC);
+		return $result;
 	}
 }

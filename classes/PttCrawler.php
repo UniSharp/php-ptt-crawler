@@ -69,8 +69,9 @@ class PttCrawler
 			$save_article_arr = array();
 			foreach ($current_page as $item) {
 				// 略過已抓過的文章
-				if ($this->storage->GetArticleByUrl($item["url"])) {
-					$this->error_output("notice! article: " . $item["url"] . " has been in database \n");
+				$article_id = $item['url'];
+				if ($this->storage->GetArticleByArticleId($article_id)) {
+					$this->error_output("notice! article: " . $article_id . " has been in database \n");
 					// 檢查是否抓到上次最後一篇
 					if ($this->config["stop-on-duplicate"]) {
 						$is_stop = true;
@@ -303,7 +304,6 @@ class PttCrawler
 				} else {
 					$comment_type_str = mb_substr($line, 0, 1, "utf-8");
 					if (in_array($comment_type_str, $valid_comments)) {
-						//$comment_array[array_search($comment_type_str, $valid_comments)];
 						$matches = array();
 						preg_match('/(?P<type_str>.*) (?P<author>.*): (?P<content>.*)[ ]*(?P<time>\d+\/\d+ \d+:\d+)$/', $line, $matches);
 						$actual_keys = array_keys($matches);
@@ -315,7 +315,7 @@ class PttCrawler
 								'type' => array_search($matches['type_str'], $valid_comments),
 								'author' => $matches['author'],
 								'content' => $matches['content'],
-								'time' => @$matches['time'],
+								'time' => $matches['time'],
 							);
 
 							array_push($comment_array, $comment_data);
