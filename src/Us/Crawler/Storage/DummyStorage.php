@@ -1,4 +1,4 @@
-<?php
+<?php namespace Us\Crawler\Storage;
 
 class DummyStorage implements StorageInterface
 {
@@ -21,10 +21,10 @@ class DummyStorage implements StorageInterface
 	 */
 	public function InsertArticle($array, $board_name)
 	{
-		echo "url: https://www.ptt.cc/bbs/{$board_name}/{$array["id"]}.html \n";
-		echo "author: {$array["author"]} \n";
-		echo "time: {$array["time"]} \n";
-		echo "content: {$array["content"]} \n";
+		echo "url: https://www.ptt.cc/bbs/{$board_name}/{$array["id"]}.html\n";
+		echo "author: {$array["author"]}\n";
+		echo "time: {$array["time"]}\n";
+		echo "content:\n{$array["content"]}\n";
 	}
 
 	public function InsertComments($article_id, $comment_array)

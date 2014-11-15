@@ -1,5 +1,7 @@
-<?php
-require 'Parser.php';
+<?php namespace Us\Crawler\Engine;
+
+use \Sunra\PhpSimple\HtmlDomParser;
+use \Us\Crawler\Storage\StorageInterface;
 
 class PttCrawler
 {
@@ -148,7 +150,7 @@ class PttCrawler
 	private function page_count()
 	{
 		$result = array();
-		$dom = str_get_html($this->fetch_page_html(null));
+		$dom = HtmlDomParser::str_get_html($this->fetch_page_html(null), $lowercase=true, $forceTagsClosed=true, $target_charset = DEFAULT_TARGET_CHARSET, $stripRN=false);
 		foreach ($dom->find('a[class=btn wide]') as $element) {
 			array_push($result, $element->href);
 		}
@@ -161,7 +163,7 @@ class PttCrawler
 	private function fetch_page($index)
 	{
 		$this->error_output("fetching page: " . $index . "\n");
-		$dom = str_get_html($this->fetch_page_html($index));
+		$dom = HtmlDomParser::str_get_html($this->fetch_page_html($index), $lowercase=true, $forceTagsClosed=true, $target_charset = DEFAULT_TARGET_CHARSET, $stripRN=false);
 		// 如果取得資料失敗, 回傳NULL
 		if ($dom == null) {
 			return null;
@@ -234,7 +236,7 @@ class PttCrawler
 	// 取得當篇文章的詳細資料
 	private function fetch_article($id)
 	{
-		$dom = str_get_html($this->fetch_article_html($id));
+		$dom = HtmlDomParser::str_get_html($this->fetch_article_html($id), $lowercase=true, $forceTagsClosed=true, $target_charset = DEFAULT_TARGET_CHARSET, $stripRN=false);
 
 		// 如果取得資料失敗, 回傳NULL
 		if ($dom == null) {

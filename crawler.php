@@ -1,5 +1,10 @@
 <?php
-require 'bootstrap.php';
+require 'vendor/autoload.php';
+
+use \Us\Crawler\Storage\RDBStorage;
+use \Us\Crawler\Storage\DummyStorage;
+use \Us\Crawler\Engine\PttCrawler;
+
 
 $board_name = null;
 $shortopts  = "";

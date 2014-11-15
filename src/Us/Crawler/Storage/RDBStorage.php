@@ -1,4 +1,7 @@
-<?php
+<?php namespace Us\Crawler\Storage;
+
+use \PDO;
+use \PDOException;
 
 class RDBStorage extends Database implements StorageInterface
 {

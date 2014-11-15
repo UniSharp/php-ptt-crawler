@@ -1,4 +1,5 @@
-<?php
+<?php namespace Us\Crawler\Storage;
+use \PDO;
 
 class Database
 {

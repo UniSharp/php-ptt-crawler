@@ -1,4 +1,4 @@
-<?php
+<?php namespace Us\Crawler\Storage;
 
 interface StorageInterface {
 
