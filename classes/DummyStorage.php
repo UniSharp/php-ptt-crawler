@@ -17,14 +17,26 @@ class DummyStorage implements StorageInterface
 	}
 
 	/**
-	 * Insert Article
+	 * Insert Articlep
 	 */
 	public function InsertArticle($array, $board_name)
 	{
-		echo "url: https://www.ptt.cc/bbs/{$board_name}/{$array["article_id"]}.html \n";
-		echo "author: {$array["article_author"]} \n";
-		echo "time: {$array["article_time"]} \n";
-		echo "content: {$array["article_content"]} \n";
+		echo "url: https://www.ptt.cc/bbs/{$board_name}/{$array["id"]}.html \n";
+		echo "author: {$array["author"]} \n";
+		echo "time: {$array["time"]} \n";
+		echo "content: {$array["content"]} \n";
+	}
+
+	public function InsertComments($article_id, $comment_array)
+	{
+		foreach ($comment_array as $item) {
+			$author = $item['author'];
+			$time = $item['time'];
+			$type = $item['type'];
+			$content = $item['content'];
+			echo "comments: [$type][$author][$time] $content\n";
+		}
+
 	}
 
 	/**

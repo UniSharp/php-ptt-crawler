@@ -31,9 +31,9 @@ USE `ptt_crawler`;
 CREATE TABLE IF NOT EXISTS `article` (
   `id` varchar(25) NOT NULL,
   `forum` varchar(25) NOT NULL,
-  `author` varchar(30) NOT NULL,
+  `author` varchar(13) NOT NULL,
   `content` text NOT NULL,
-  `time` varchar(25) NOT NULL,
+  `time` varchar(25) NOT NULL, -- FIXME must use timestamp
   `created_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -48,8 +48,24 @@ CREATE TABLE IF NOT EXISTS `list` (
   `id` varchar(25) NOT NULL,
   `forum` varchar(25) NOT NULL,
   `title` varchar(50) NOT NULL,
-  `date` varchar(10) NOT NULL,
-  `author` varchar(20) DEFAULT NULL,
+  `date` varchar(10) NOT NULL, -- FIXME should use timestamp
+  `author` varchar(13) DEFAULT NULL,
+  `created_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+--
+-- 表的結構 `comment`
+--
+
+CREATE TABLE IF NOT EXISTS `comment` (
+  `id` INTEGER unsigned AUTO_INCREMENT NOT NULL,
+  `article_id` varchar(25) NOT NULL,
+  `type` char(1) NOT NULL DEFAULT '=',
+  `content` varchar(50) NOT NULL,
+  `time` varchar(20) NOT NULL, -- FIXME must use timestamp
+  `author` varchar(13) DEFAULT NULL,
   `created_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

@@ -32,7 +32,7 @@ class PttCrawler
 		// 抓取文章的最後日期
 		$this->config["stop-date"] = (!isset($config["stop-date"])) ? date("Y-m-d") : $config["stop-date"];
 		// 設定是否只抓到上次的最後一篇
-		$this->config["stop-on-duplicate"] = (!isset($config["stop-on-duplicate"])) ? true : $config["stop-on-duplicate"];
+		$this->config["stop-on-duplicate"] = $config["stop-on-duplicate"];
 	}
 
 	// 供外部程式呼叫執行
@@ -102,15 +102,24 @@ class PttCrawler
 			foreach ($save_article_arr as $item) {
 				$this->error_output("fetching article id: " . $item["url"] . "\n");
 				// 取得每筆文章詳細資料
-				$article = $this->fetch_article($item["url"]);
+				$article_array = $this->fetch_article($item["url"]);
 				// 過濾詭異文章
-				if ($article == null) {
+				if ($article_array == null) {
 					$this->error_output("notice! article: " . $item["url"] . " was skipped \n");
 					continue;
 				}
 				// 存入每筆文章詳細資料(returned id)
 				try {
-					$this->storage->InsertArticle($article, $this->board_name);
+					$this->storage->InsertArticle($article_array, $this->board_name);
+				} catch (PDOException $e) {
+					if ($e->errorInfo[1] == SERVER_SHUTDOWN_CODE) { // FIXME just $e->getCode()
+						exit("mysql server connection error!");
+						// todo
+					}
+				}
+
+				try {
+					$this->storage->InsertComments($article_array['id'], $article_array['comments']);
 				} catch (PDOException $e) {
 					if ($e->errorInfo[1] == SERVER_SHUTDOWN_CODE) { // FIXME just $e->getCode()
 						exit("mysql server connection error!");
@@ -232,31 +241,95 @@ class PttCrawler
 		}
 		$result = array();
 
+
+		$count = 0;
+		foreach ($dom->find('span[class=article-meta-value]') as $element) {
+			$count++;
+			if ($count % 4 == 0) {
+				$result["id"] = $id;
+				$result["time"] = trim($element->plaintext);
+			} elseif ($count % 4 == 1) {
+				$result["author"] = trim($element->plaintext);
+			}
+		}
+
+
 		// 取得文章內容
 		// FIXME don't use foreach. there will be only one main-container in a page.
 		foreach ($dom->find('div[id=main-container]') as $element) {
 			$content = strip_tags(trim($element));
 
-			// FIXME URGENT too ugly, use regexp and parsing line by line to improve performance
-			$result["article_id"] = $id;
-			$pos_1 = strpos($content, "作者");
-			$pos_2 = strpos($content, "看板");
-			$result["article_author"] = substr($content, $pos_1 + 6, $pos_2 - 11);
+			// 整篇文章
+			$article_array = explode(PHP_EOL, $content);
+			// 內文
+			$content_array = array();
+			// 推文
+			$valid_comments = array(
+				'+' => '推',
+				'-' => '噓',
+				'=' => '→'
+			);
+			$comment_array = array();
 
-			$pos_1 = strpos($content, "時間");
-			$result["article_time"] = substr($content, $pos_1 + 6, 24);
+			// trim article headers
+			if (count($article_array) > 2) {
+				if (trim($article_array[0]) === "") {
+					array_shift($article_array);
+				}
+				$meta_line = trim($article_array[0]);
+				if (strpos($meta_line, "作者") === 0) {
+					array_shift($article_array);
+				}
+			}
 
-			$pos_1 = strpos($content, @$result["article_time"]); // FIXME do not use @
-			$pos_2 = strpos($content, "※ 發信站");
-			$result["article_content"] = substr($content, $pos_1 + strlen(@$result["article_time"]) + 1, $pos_2 - $pos_1 - 28); // FIXME do not use @
-			$result["article_content"] = str_replace(
-				array('&#34;', '&lt;' ,'&gt;'),
-				array('"', '<', '>'),
-				$result["article_content"]);
+			// trim article footers
+			while (trim($article_array[count($article_array) - 1]) === "") {
+				array_pop($article_array);
+			}
+
+			// comments
+
+			$is_comments_start = false;
+			foreach ($article_array as $line) {
+				$line = htmlspecialchars_decode($line);
+				if (strpos($line, "※ 發信站:") === 0) {
+					// the following lines are comments
+					$is_comments_start = true;
+				}
+
+				// 還沒到 comment, 就當作是內文
+				if (!$is_comments_start) {
+					array_push($content_array, $line);
+				} else {
+					$comment_type_str = mb_substr($line, 0, 1, "utf-8");
+					if (in_array($comment_type_str, $valid_comments)) {
+						//$comment_array[array_search($comment_type_str, $valid_comments)];
+						$matches = array();
+						preg_match('/(?P<type_str>.*) (?P<author>.*): (?P<content>.*)[ ]*(?P<time>\d+\/\d+ \d+:\d+)$/', $line, $matches);
+						$actual_keys = array_keys($matches);
+						$expected_keys = array('type_str', 'author', 'content', 'time');
+						if (count(array_intersect($expected_keys, $actual_keys)) !== 4) {
+							$this->error_output("Incorrect comment line: " . $line . "\n");
+						} else {
+							$comment_data = array(
+								'type' => array_search($matches['type_str'], $valid_comments),
+								'author' => $matches['author'],
+								'content' => $matches['content'],
+								'time' => @$matches['time'],
+							);
+
+							array_push($comment_array, $comment_data);
+						}
+					}
+				}
+			}
+
+			$result['comments'] = $comment_array;
+			$result['content'] = implode("\n", $content_array);
 		}
 
 		// 過濾詭異文章
-		if (!isset($result["article_id"])) {
+		if (!isset($result["id"])) {
 			return null;
 		}
 		return $result;

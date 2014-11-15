@@ -34,14 +34,14 @@ class RDBStorage extends Database implements StorageInterface
 	public function InsertArticle($article_array, $board_name)
 	{
 		$sql = "INSERT INTO article (id, forum, author, content, `time`) VALUES (:id, :forum, :author, :content, :time)";
-		$bind["id"] = $article_array["article_id"];
+		$bind["id"] = $article_array["id"];
 		$bind["forum"] = $board_name;
-		$bind["author"] = $article_array["article_author"];
-		$bind["content"] = $article_array["article_content"];
-		$bind["time"] = $article_array["article_time"];
+		$bind["author"] = $article_array["author"];
+		$bind["content"] = $article_array["content"];
+		$bind["time"] = $article_array["time"];
 
 		$count = 0;
-		while($count < 3) {
+		while ($count < 3) {
 			try {
 				$query = $this->db->prepare($sql);
 				$query->execute($bind);
@@ -58,13 +58,40 @@ class RDBStorage extends Database implements StorageInterface
 		return $this->db->lastInsertId();
 	}
 
+	public function InsertComments($article_id, $comment_array)
+	{
+		foreach ($comment_array as $item) {
+			$sql = 'INSERT INTO `comment` (article_id, `type`, content, `time`, author) VALUES (:article_id, :type, :content, :time, :author)';
+			$bind["article_id"] = $article_id;
+			$bind["type"] = $item["type"];
+			$bind["author"] = $item["author"];
+			$bind["content"] = $item["content"];
+			$bind["time"] = $item["time"];
+			$count = 0;
+			while ($count < 3) {
+				try {
+					$query = $this->db->prepare($sql);
+					$query->execute($bind);
+					break;
+				} catch (PDOException $e) {
+					if ($e->errorInfo[1] == SERVER_SHUTDOWN_CODE) {
+						$this->reconnectPDO();
+					}
+					$count++;
+				}
+			}
+		}
+
+		return $this->db->lastInsertId();
+	}
+
 	/**
 	 * 判斷文章是否已存在
 	 * FIXME werid in sementic
 	 */
 	public function GetArticleByUrl($id)
 	{
-		$sql = "SELECT COUNT(id) as count FROM list WHERE id = :id";
+		$sql = "SELECT COUNT(id) as count FROM list WHERE id = :id"; // FIXME must get from article not list
 		$bind["id"] = $id;
 
 		try {

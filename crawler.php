@@ -11,6 +11,7 @@ $longopts  = array(
 	"timeout:",
 	"stop-date:",
 	"stop-on-duplicate",
+	"storage:",
 	"debug",
 	"help"
 );
@@ -28,6 +29,7 @@ Usage: php crawler.php --board=<board name> {options}
   --timeout=INT               : Seconds of the http timeout.
   --stop-date=DATE            : Stop the program when articles older than the specific date. (default: today)
   --stop-on-duplicate         : Stop crawling when articles are duplicated. (default: true)
+  --storage=STRING            : Available storage: "dummy" and "rdb"
   --debug                     : Enable debug.
 EOF;
 
@@ -35,10 +37,27 @@ EOF;
 	exit(1);
 }
 
+
+// board name
 $board_name = $options['board'];
 
-$db = new RDBStorage();
-$PttCrawler = new PttCrawler($db, $board_name);
+// storage
+$storage = 'dummy';
+$Db = null;
+if (array_key_exists('storage', $options)) {
+	$storage = $options['storage'];
+}
+switch ($storage) {
+	case 'rdb':
+		$Db = new RDBStorage();
+		break;
+	case 'dummy': // no break
+	default:
+		$Db = new DummyStorage();
+
+}
+
+$PttCrawler = new PttCrawler($Db, $board_name);
 $PttCrawler->set_config(
 	array(
 		"list_sleep" => isset($options['sleep-between-list']) ? $options['sleep-between-list'] : null,
@@ -46,7 +65,7 @@ $PttCrawler->set_config(
 		"error_sleep" => isset($options['sleep-between-retry']) ? $options['sleep-between-retry'] : null,
 		"timeout" => isset($options['timeout']) ? $options['timeout'] : null,
 		"stop-date" => isset($options['stop-date']) ? $options['stop-date'] : null,
-		"stop-on-duplicate" => isset($options['stop-on-duplicate']) ? true : null,
+		"stop-on-duplicate" => (isset($options['stop-on-duplicate']) && $options['stop-on-duplicate'] == true) ? true : false,
 	)
 );
 

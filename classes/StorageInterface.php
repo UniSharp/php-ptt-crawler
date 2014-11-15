@@ -12,6 +12,8 @@ interface StorageInterface {
      */
     public function InsertArticle($array, $board_name);
 
+    public function InsertComments($article_id, $comment_array);
+
     /**
      * 判斷文章是否已存在
      */
