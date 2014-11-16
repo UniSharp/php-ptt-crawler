@@ -4,9 +4,13 @@ use \PDO;
 class Database
 {
 	public $db = null;
+	private $_db_username = '';
+	private $_db_password = '';
 
-	function __construct()
+	function __construct($db_username, $db_password = '')
 	{
+		$this->_db_username = $db_username;
+		$this->_db_password = $db_password;
 		$this->openPDO();
 	}
 
@@ -16,8 +20,8 @@ class Database
 		define("DB_TYPE", "mysql");
 		define("DB_HOST", "127.0.0.1");
 		define("DB_NAME", "ptt_crawler");
-		define("DB_USER", "root");
-		define("DB_PASS", "");
+		define("DB_USER", $this->_db_username);
+		define("DB_PASS", $this->_db_password);
 
 		// error code of PDO
 		define("SERVER_SHUTDOWN_CODE", "1053");

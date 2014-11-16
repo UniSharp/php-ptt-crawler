@@ -17,6 +17,8 @@ $longopts  = array(
 	"stop-date:",
 	"stop-on-duplicate",
 	"storage:",
+	"db-username:",
+	"db-password:",
 	"debug",
 	"help"
 );
@@ -35,6 +37,8 @@ Usage: php crawler.php --board=<board name> {options}
   --stop-date=DATE            : Stop the program when articles older than the specific date. (default: today)
   --stop-on-duplicate         : Stop crawling when articles are duplicated. (default: true)
   --storage=STRING            : Available storage: "dummy" and "rdb"
+  --db-username=STRING        : Database username
+  --db-password=STRING        : Database password
   --debug                     : Enable debug.
 EOF;
 
@@ -54,7 +58,14 @@ if (array_key_exists('storage', $options)) {
 }
 switch ($storage) {
 	case 'rdb':
-		$Db = new RDBStorage();
+		$db_username = $options['db-username'];
+		$db_password = '';
+		if (array_key_exists('db-password', $options)) {
+			$db_password = $options['db-password'];
+
+		}
+
+		$Db = new RDBStorage($db_username, $db_password);
 		break;
 	case 'dummy': // no break
 	default:
