@@ -22,13 +22,19 @@ class RDBStorage extends Database implements StorageInterface
 		$bind["title"] = $array["title"];
 		$bind["date"] = $array["date"];
 		$bind["author"] = $array["author"];
+		$res = null;
 		try {
 			$query = $this->db->prepare($sql);
-			$query->execute($bind);
+			$res = $query->execute($bind);
 		} catch (PDOException $e) {
-			// FIXME useless trowing exception.
-			throw $e;
+			if ($e->getCode() === "23000") {
+				// skip on duplicate key
+			} else {
+				// TODO handle more exception
+				throw $e;
+			}
 		}
+		return $res;
 	}
 
 	/**
