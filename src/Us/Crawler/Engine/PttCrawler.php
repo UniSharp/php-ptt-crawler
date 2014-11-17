@@ -32,6 +32,7 @@ class PttCrawler
 		$this->config["error_sleep"] = (!isset($config["error_sleep"])) ? 2 : $config["error_sleep"];
 		// 連線送出timeout
 		$this->config["timeout"] = (!isset($config["timeout"])) ? 10 : $config["timeout"];
+		$this->config["start-page"] = (!isset($config["start-page"])) ? null : $config["start-page"];
 		// 抓取文章的最後日期
 		$this->config["stop-date"] = (!isset($config["stop-date"])) ? date("Y-m-d") : $config["stop-date"];
 		$this->config["start-date"] = (!isset($config["start-date"])) ? date("Y-m-d") : $config["start-date"];
@@ -55,8 +56,12 @@ class PttCrawler
 	{
 		$state = 0;
 		$is_stop = false;
-		// 取得總頁數
-		$last_page = $this->page_count();
+		if (isset($this->config['start-page'])) {
+			$last_page = $this->config['start-page'];
+		} else {
+			// 取得總頁數
+			$last_page = $this->page_count();
+		}
 
 		for ($i = $last_page; $i >= 1; $i--) {
 			sleep($this->config["list_sleep"]);
