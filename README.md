@@ -9,13 +9,7 @@ This README would normally document whatever steps are necessary to get your app
 
 ### How do I get set up? ###
 
-* Import DB schema "ptt_crawler.sql"
-* Change DB configurations in "Database.php"
-* Run the crawler.php with CLI
-* Command usage: 
-```
-#!php
-
-php crawler.php {Board Name}
-
-```
+* install [composer](https://getcomposer.org/)
+* `make init`
+* `make`
+* `./crawler --help`

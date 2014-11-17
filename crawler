@@ -1,3 +1,4 @@
+#!/usr/bin/env php
 <?php
 require 'vendor/autoload.php';
 
@@ -30,16 +31,18 @@ if (isset($options['help']) || !array_key_exists('board', $options)) {
 	$fe = fopen('php://stderr', 'w');
 	$help_msg = <<<EOF
 Usage: php crawler.php --board=<board name> {options}
+  --board                     : Board (forum) name. (required)
   --sleep-between-list=INT    : Seconds to sleep between fetching different index pages.
   --sleep-between-article=INT : Seconds to sleep between fetching articles.
   --sleep-between-retry=INT   : Seconds to sleep when error occurrs.
   --timeout=INT               : Seconds of the http timeout.
-  --stop-date=DATE            : Stop the program when articles older than the specific date. (default: today)
+  --stop-date=DATE            : Stop the program when articles older than the specific date. (default: {today})
   --stop-on-duplicate         : Stop crawling when articles are duplicated. (default: true)
   --storage=STRING            : Available storage: "dummy" and "rdb"
-  --db-username=STRING        : Database username
+  --db-username=STRING        : Database username (required when using '--storage=rdb')
   --db-password=STRING        : Database password
-  --debug                     : Enable debug.
+  --help                      : Show this dialog
+  --debug                     : Enable debug
 EOF;
 
 	fwrite($fe, "$help_msg\n");
