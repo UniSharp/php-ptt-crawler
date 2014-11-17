@@ -46,6 +46,7 @@ Usage: php crawler.php --board=<board name> {options}
 EOF;
 
 	fwrite($fe, "$help_msg\n");
+	fclose($fe);
 	exit(1);
 }
 
