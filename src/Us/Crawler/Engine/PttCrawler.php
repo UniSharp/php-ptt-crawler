@@ -59,6 +59,7 @@ class PttCrawler
 		$last_page = $this->page_count();
 
 		for ($i = $last_page; $i >= 1; $i--) {
+			sleep($this->config["list_sleep"]);
 			// 檢查爬蟲是否該繼續爬資料
 			if ($is_stop) break;
 			// 取得每頁文章基本資料
@@ -108,7 +109,6 @@ class PttCrawler
 						// todo
 					} // FIXME URGENT what else ?
 				}
-				sleep($this->config["list_sleep"]);
 			}
 
 			foreach ($save_article_arr as $item) {
