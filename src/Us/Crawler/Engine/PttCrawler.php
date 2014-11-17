@@ -11,6 +11,7 @@ class PttCrawler
 
 	const STATE_DUPLICATED = 0x01;
 	const STATE_DATE_REACHED = 0x02;
+	const STATE_DATE_AHEAD = 0x04;
 
 	public function __construct(StorageInterface $storage, $board_name)
 	{
@@ -24,7 +25,7 @@ class PttCrawler
 	public function set_config($config)
 	{
 		// 每頁清單抓完間隔時間
-		$this->config["list_sleep"] = (!isset($config["list_sleep"])) ? 0.5 : $config["list_sleep"];
+		$this->config["list_sleep"] = (!isset($config["list_sleep"])) ? 2 : $config["list_sleep"];
 		// 每篇文章抓完間隔時間
 		$this->config["article_sleep"] = (!isset($config["article_sleep"])) ? 2 : $config["article_sleep"];
 		// 連線失敗間隔時間
@@ -33,6 +34,7 @@ class PttCrawler
 		$this->config["timeout"] = (!isset($config["timeout"])) ? 10 : $config["timeout"];
 		// 抓取文章的最後日期
 		$this->config["stop-date"] = (!isset($config["stop-date"])) ? date("Y-m-d") : $config["stop-date"];
+		$this->config["start-date"] = (!isset($config["start-date"])) ? date("Y-m-d") : $config["start-date"];
 		// 設定是否只抓到上次的最後一篇
 		$this->config["stop-on-duplicate"] = $config["stop-on-duplicate"];
 	}
@@ -79,6 +81,13 @@ class PttCrawler
 						$is_stop = true;
 						$state |= self::STATE_DUPLICATED;
 					}
+					continue;
+				}
+
+				// skip articles when date ahead
+				if ($this->is_date_ahead($item["date"])) {
+					$this->error_output("notice! article: " . $item["url"] . " is ahead " . $this->config["start-date"] . ", skipped \n");
+					$state |= self::STATE_DATE_AHEAD;
 					continue;
 				}
 				// 略過已到設定日期文章
@@ -344,6 +353,11 @@ class PttCrawler
 	private function is_date_over($article_date)
 	{
 		return (strtotime(date($article_date)) <= strtotime('-1 day', strtotime($this->config["stop-date"]))) ? true : false;
+	}
+
+	private function is_date_ahead($article_date)
+	{
+		return (strtotime(date($article_date)) > strtotime($this->config["start-date"])) ? true : false;
 	}
 
 	private function init_opts()

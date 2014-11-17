@@ -15,6 +15,7 @@ $longopts  = array(
 	"sleep-between-article:",
 	"sleep-between-retry:",
 	"timeout:",
+	"start-date:",
 	"stop-date:",
 	"stop-on-duplicate",
 	"storage:",
@@ -32,10 +33,11 @@ if (isset($options['help']) || !array_key_exists('board', $options)) {
 	$help_msg = <<<EOF
 Usage: php crawler.php --board=<board name> {options}
   --board                     : Board (forum) name. (required, case sensitive)
-  --sleep-between-list=INT    : Seconds to sleep between fetching different index pages. (default: 0.5)
+  --sleep-between-list=INT    : Seconds to sleep between fetching different index pages. (default: 2)
   --sleep-between-article=INT : Seconds to sleep between fetching articles. (default: 2)
   --sleep-between-retry=INT   : Seconds to sleep when error occurrs. (default: 2)
   --timeout=INT               : Seconds of the http timeout. (default: 10)
+  --start-date=DATE            : On which date the crawler should start crawling (format: YYYY-MM-DD, ex. 2014-11-30) (default, {today})
   --stop-date=DATE            : Stop the program when articles older than the specific date. (format: YYYY-MM-DD, ex. 2014-11-30) (default: {today})
   --stop-on-duplicate         : Stop crawling when articles are duplicated. (default: true)
   --storage=STRING            : Available storage: "dummy" and "rdb"
@@ -84,6 +86,7 @@ $PttCrawler->set_config(
 		"article_sleep" => isset($options['sleep-between-article']) ? $options['sleep-between-article'] : null,
 		"error_sleep" => isset($options['sleep-between-retry']) ? $options['sleep-between-retry'] : null,
 		"timeout" => isset($options['timeout']) ? $options['timeout'] : null,
+		"start-date" => isset($options['start-date']) ? $options['start-date'] : null,
 		"stop-date" => isset($options['stop-date']) ? $options['stop-date'] : null,
 		"stop-on-duplicate" => (isset($options['stop-on-duplicate']) && $options['stop-on-duplicate'] == true) ? true : false,
 	)
