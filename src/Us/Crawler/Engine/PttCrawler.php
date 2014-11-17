@@ -325,7 +325,7 @@ class PttCrawler
 					$comment_type_str = mb_substr($line, 0, 1, "utf-8");
 					if (in_array($comment_type_str, $valid_comments)) {
 						$matches = array();
-						preg_match('/(?P<type_str>.*) (?P<author>.*): (?P<content>.*)[ ]*(?P<time>\d+\/\d+ \d+:\d+)$/', $line, $matches);
+						preg_match('/(?P<type_str>.*) (?P<author>.*): (?P<content>.*)[ ]*(?P<time>\d\d\/\d\d \d\d:\d\d)$/', $line, $matches);
 						$actual_keys = array_keys($matches);
 						$expected_keys = array('type_str', 'author', 'content', 'time');
 						if (count(array_intersect($expected_keys, $actual_keys)) !== 4) {
