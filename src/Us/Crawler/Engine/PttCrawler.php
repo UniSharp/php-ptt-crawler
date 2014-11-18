@@ -304,7 +304,7 @@ class PttCrawler
 			}
 
 			// trim article footers
-			while (trim($article_array[count($article_array) - 1]) === "") {
+			while (count($article_array) && trim($article_array[count($article_array) - 1]) === "") {
 				array_pop($article_array);
 			}
 
