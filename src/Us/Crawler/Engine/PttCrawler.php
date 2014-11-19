@@ -61,6 +61,10 @@ class PttCrawler
 		} else {
 			// 取得總頁數
 			$last_page = $this->page_count();
+			if ($last_page === null) {
+				$this->error_output("Failed to get total page \n");
+				return false;
+			}
 		}
 
 		for ($i = $last_page; $i >= 1; $i--) {
@@ -92,13 +96,13 @@ class PttCrawler
 
 				// skip articles when date ahead
 				if ($this->is_date_ahead($item["date"])) {
-					$this->error_output("notice! article: " . $item["url"] . " is ahead " . $this->config["start-date"] . ", skipped \n");
+					$this->error_output("notice! article: " . $item["url"] . " ({$item['date']}) is ahead " . $this->config["start-date"] . ", skipped \n");
 					$state |= self::STATE_DATE_AHEAD;
 					continue;
 				}
 				// 略過已到設定日期文章
 				if ($this->is_date_over($item["date"])) {
-					$this->error_output("notice! article: " . $item["url"] . " is earlier than " . $this->config["stop-date"] . " \n");
+					$this->error_output("notice! article: " . $item["url"] . " ({$item['date']} is earlier than " . $this->config["stop-date"] . " \n");
 					$is_stop = true;
 					$state |= self::STATE_DATE_REACHED;
 					continue;
@@ -165,6 +169,9 @@ class PttCrawler
 	{
 		$result = array();
 		$dom = HtmlDomParser::str_get_html($this->fetch_page_html(null), $lowercase=true, $forceTagsClosed=true, $target_charset = DEFAULT_TARGET_CHARSET, $stripRN=false);
+		if (!$dom) {
+			return null;
+		}
 		foreach ($dom->find('a[class=btn wide]') as $element) {
 			array_push($result, $element->href);
 		}
@@ -254,7 +261,7 @@ class PttCrawler
 
 		// 如果取得資料失敗, 回傳NULL
 		if ($dom == null) {
-			return $dom;
+			return null;
 		}
 		$result = array();
 
@@ -265,7 +272,7 @@ class PttCrawler
 			if ($count % 4 == 0) {
 				$result["id"] = $id;
 				$result["time"] = trim($element->plaintext);
-			} elseif ($count % 4 == 1) {
+			} else if ($count % 4 == 1) {
 				$author_string = trim($element->plaintext);
 				$matches = array();
 				preg_match('/^(?P<author>.*) \((?P<nick>.*)\)/', $author_string, $matches);
