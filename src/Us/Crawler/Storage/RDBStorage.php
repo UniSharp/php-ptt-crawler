@@ -68,10 +68,11 @@ class RDBStorage extends Database implements StorageInterface
 		return $this->db->lastInsertId();
 	}
 
-	public function InsertComments($article_id, $comment_array)
+	public function InsertComments($article_id, $article_time, $comment_array)
 	{
+		$year = date("Y", $article_time); // use article year as comment year
 		foreach ($comment_array as $item) {
-			$item['ts'] = date("Y-m-d H:i:s", strtotime($item['time']));
+			$item['ts'] = date("Y-m-d H:i:s", strtotime($item['time'] . " $year")); // FIXME dangerous
 			$sql = 'INSERT INTO `comment` (article_id, `type`, content, `ts`, author) VALUES (:article_id, :type, :content, :ts, :author)';
 			$bind["article_id"] = $article_id;
 			$bind["type"] = $item["type"];

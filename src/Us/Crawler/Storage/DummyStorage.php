@@ -28,7 +28,7 @@ class DummyStorage implements StorageInterface
 		echo "content:\n{$array["content"]}\n";
 	}
 
-	public function InsertComments($article_id, $comment_array)
+	public function InsertComments($article_id, $article_time, $comment_array)
 	{
 		foreach ($comment_array as $item) {
 			$author = $item['author'];

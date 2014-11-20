@@ -130,6 +130,7 @@ class PttCrawler
 					continue;
 				}
 				// 存入每筆文章詳細資料(returned id)
+				$article_array['ts'] = 0;
 				try {
 					// convert to unix timestamp
 					$article_array['ts'] = strtotime($article_array["time"]);
@@ -142,7 +143,7 @@ class PttCrawler
 				}
 
 				try {
-					$this->storage->InsertComments($article_array['id'], $article_array['comments']);
+					$this->storage->InsertComments($article_array['id'], $article_array['ts'], $article_array['comments']);
 				} catch (PDOException $e) {
 					if ($e->errorInfo[1] == SERVER_SHUTDOWN_CODE) { // FIXME just $e->getCode()
 						exit("mysql server connection error!");

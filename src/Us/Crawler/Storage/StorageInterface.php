@@ -12,7 +12,7 @@ interface StorageInterface {
      */
     public function InsertArticle($array, $board_name);
 
-    public function InsertComments($article_id, $comment_array);
+    public function InsertComments($article_id, $article_time, $comment_array);
 
     public function GetArticleByArticleId($article_id);
 }
