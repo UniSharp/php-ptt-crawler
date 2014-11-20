@@ -18,7 +18,7 @@ $longopts  = array(
 	"start-page:",
 	"start-date:",
 	"stop-date:",
-	"stop-on-duplicate",
+	"stop-on-duplicate:",
 	"storage:",
 	"db-username:",
 	"db-password:",
