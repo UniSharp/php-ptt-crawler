@@ -131,6 +131,8 @@ class PttCrawler
 				}
 				// 存入每筆文章詳細資料(returned id)
 				try {
+					// convert to unix timestamp
+					$article_array['ts'] = strtotime($article_array["time"]);
 					$this->storage->InsertArticle($article_array, $this->board_name);
 				} catch (PDOException $e) {
 					if ($e->errorInfo[1] == SERVER_SHUTDOWN_CODE) { // FIXME just $e->getCode()

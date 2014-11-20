@@ -42,13 +42,13 @@ class RDBStorage extends Database implements StorageInterface
 	 */
 	public function InsertArticle($article_array, $board_name)
 	{
-		$sql = "INSERT INTO article (id, forum, author, nick, content, `time`) VALUES (:id, :forum, :author, :nick, :content, :time)";
+		$sql = "INSERT INTO article (id, forum, author, nick, content, `ts`) VALUES (:id, :forum, :author, :nick, :content, :ts)";
 		$bind["id"] = $article_array["id"];
 		$bind["forum"] = $board_name;
 		$bind["author"] = $article_array["author"];
 		$bind["nick"] = $article_array["nick"];
 		$bind["content"] = $article_array["content"];
-		$bind["time"] = $article_array["time"];
+		$bind["ts"] = date("Y-m-d H:i:s", $article_array["ts"]);
 
 		$count = 0;
 		while ($count < 3) {
@@ -71,12 +71,13 @@ class RDBStorage extends Database implements StorageInterface
 	public function InsertComments($article_id, $comment_array)
 	{
 		foreach ($comment_array as $item) {
-			$sql = 'INSERT INTO `comment` (article_id, `type`, content, `time`, author) VALUES (:article_id, :type, :content, :time, :author)';
+			$item['ts'] = date("Y-m-d H:i:s", strtotime($item['time']));
+			$sql = 'INSERT INTO `comment` (article_id, `type`, content, `ts`, author) VALUES (:article_id, :type, :content, :ts, :author)';
 			$bind["article_id"] = $article_id;
 			$bind["type"] = $item["type"];
 			$bind["author"] = $item["author"];
 			$bind["content"] = $item["content"];
-			$bind["time"] = $item["time"];
+			$bind["ts"] = $item["ts"];
 			$count = 0;
 			while ($count < 3) {
 				try {
