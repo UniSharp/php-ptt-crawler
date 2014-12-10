@@ -85,7 +85,7 @@ class PttCrawler
 				// 略過已抓過的文章
 				$article_id = $item['url'];
 				if ($this->storage->GetArticleByArticleId($article_id)) {
-					$this->error_output("notice! article: " . $article_id . " has been in database \n");
+					$this->error_output("notice! article: " . $article_id . " ({$item['date']}) has been in database \n");
 					// 檢查是否抓到上次最後一篇
 					if ($this->config["stop-on-duplicate"]) {
 						$is_stop = true;
@@ -121,7 +121,7 @@ class PttCrawler
 			}
 
 			foreach ($save_article_arr as $item) {
-				$this->error_output("fetching article id: " . $item["url"] . "\n");
+				$this->error_output("fetching article id: " . $item["url"] . "({$item['date']}) \n");
 				// 取得每筆文章詳細資料
 				$article_array = $this->fetch_article($item["url"]);
 				// 過濾詭異文章
@@ -134,6 +134,7 @@ class PttCrawler
 				try {
 					// convert to unix timestamp
 					$article_array['ts'] = strtotime($article_array["time"]);
+					$article_array['title'] = $item['title'];
 					$this->storage->InsertArticle($article_array, $this->board_name);
 				} catch (PDOException $e) {
 					if ($e->errorInfo[1] == SERVER_SHUTDOWN_CODE) { // FIXME just $e->getCode()
@@ -198,7 +199,7 @@ class PttCrawler
 		foreach ($dom->find('div[class=title] a, div[class=date], div[class=author]') as $element) {
 			$count++;
 			$post = array();
-			if ($count % 3 == 1) { // FIXME kind of ugly
+			if ($count % 3 == 1) { // FIXME kind oetitlf ugly
 				$post_temp["url"] = str_replace(array("/bbs/" . $this->board_name . "/", ".html"), "", $element->href); // FIXME this should be called article_id instead of url
 				$post_temp["title"] = $element->plaintext;
 				// 過濾被刪除文章
