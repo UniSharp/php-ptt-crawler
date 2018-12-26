@@ -1,6 +1,7 @@
 <?php namespace Us\Crawler\Storage;
 
-interface StorageInterface {
+interface StorageInterface
+{
 
     /**
      * Insert List
@@ -16,4 +17,3 @@ interface StorageInterface {
 
     public function GetArticleByArticleId($article_id);
 }
-
