@@ -6,32 +6,31 @@ use \Us\Crawler\Storage\RDBStorage;
 use \Us\Crawler\Storage\DummyStorage;
 use \Us\Crawler\Engine\PttCrawler;
 
-
 $board_name = null;
 $shortopts  = "";
 $longopts  = array(
-	"board:",
-	"sleep-between-list:",
-	"sleep-between-article:",
-	"sleep-between-retry:",
-	"timeout:",
-	"start-page:",
-	"start-date:",
-	"stop-date:",
-	"stop-on-duplicate:",
-	"storage:",
-	"db-username:",
-	"db-password:",
-	"debug",
-	"help"
+    "board:",
+    "sleep-between-list:",
+    "sleep-between-article:",
+    "sleep-between-retry:",
+    "timeout:",
+    "start-page:",
+    "start-date:",
+    "stop-date:",
+    "stop-on-duplicate:",
+    "storage:",
+    "db-username:",
+    "db-password:",
+    "debug",
+    "help"
 );
 
 $options = getopt($shortopts, $longopts);
 
 
 if (isset($options['help']) || !array_key_exists('board', $options)) {
-	$fe = fopen('php://stderr', 'w');
-	$help_msg = <<<EOF
+    $fe = fopen('php://stderr', 'w');
+    $help_msg = <<<EOF
 Usage: php crawler.php --board=<board name> {options}
   --board                     : Board (forum) name. (required, case sensitive)
   --sleep-between-list=INT    : Seconds to sleep between fetching different index pages. (default: 2)
@@ -49,9 +48,9 @@ Usage: php crawler.php --board=<board name> {options}
   --debug                     : Enable debug (not implement yet)
 EOF;
 
-	fwrite($fe, "$help_msg\n");
-	fclose($fe);
-	exit(1);
+    fwrite($fe, "$help_msg\n");
+    fclose($fe);
+    exit(1);
 }
 
 
@@ -62,37 +61,36 @@ $board_name = $options['board'];
 $storage = 'dummy';
 $Db = null;
 if (array_key_exists('storage', $options)) {
-	$storage = $options['storage'];
+    $storage = $options['storage'];
 }
 switch ($storage) {
-	case 'rdb':
-		$db_username = $options['db-username'];
-		$db_password = '';
-		if (array_key_exists('db-password', $options)) {
-			$db_password = $options['db-password'];
+    case 'rdb':
+        $db_username = $options['db-username'];
+        $db_password = '';
+        if (array_key_exists('db-password', $options)) {
+            $db_password = $options['db-password'];
+        }
 
-		}
-
-		$Db = new RDBStorage($db_username, $db_password);
-		break;
-	case 'dummy': // no break
-	default:
-		$Db = new DummyStorage();
+        $Db = new RDBStorage($db_username, $db_password);
+        break;
+    case 'dummy':
+    default:
+        $Db = new DummyStorage();
 
 }
 
 $PttCrawler = new PttCrawler($Db, $board_name);
 $PttCrawler->set_config(
-	array(
-		"list_sleep" => isset($options['sleep-between-list']) ? $options['sleep-between-list'] : null,
-		"article_sleep" => isset($options['sleep-between-article']) ? $options['sleep-between-article'] : null,
-		"error_sleep" => isset($options['sleep-between-retry']) ? $options['sleep-between-retry'] : null,
-		"timeout" => isset($options['timeout']) ? $options['timeout'] : null,
-		"start-date" => isset($options['start-date']) ? $options['start-date'] : null,
-		"stop-date" => isset($options['stop-date']) ? $options['stop-date'] : null,
-		"stop-on-duplicate" => (isset($options['stop-on-duplicate']) && $options['stop-on-duplicate'] == true) ? true : false,
-		"start-page" => isset($options['start-page']) ? $options['start-page'] : null,
-	)
+    array(
+        "list_sleep" => isset($options['sleep-between-list']) ? $options['sleep-between-list'] : null,
+        "article_sleep" => isset($options['sleep-between-article']) ? $options['sleep-between-article'] : null,
+        "error_sleep" => isset($options['sleep-between-retry']) ? $options['sleep-between-retry'] : null,
+        "timeout" => isset($options['timeout']) ? $options['timeout'] : null,
+        "start-date" => isset($options['start-date']) ? $options['start-date'] : null,
+        "stop-date" => isset($options['stop-date']) ? $options['stop-date'] : null,
+        "stop-on-duplicate" => (isset($options['stop-on-duplicate']) && $options['stop-on-duplicate'] == true) ? true : false,
+        "start-page" => isset($options['start-page']) ? $options['start-page'] : null,
+    )
 );
 
 $return_code = $PttCrawler->run();
